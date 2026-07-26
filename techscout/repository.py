@@ -14,7 +14,6 @@ from techscout.scraper import ScrapedProduct
 
 class ProductRepository:
 
-
     def __init__(self, engine: Engine) -> None:
    
         self.engine = engine
