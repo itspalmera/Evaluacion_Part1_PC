@@ -1,7 +1,6 @@
 """Scraper para Web Scraper Test Sites - E-commerce (static).
 
-Recorre el catálogo paginado de una subcategoría usando Selenium en modo headless,
-esperas explícitas (WebDriverWait) y extracción de tarjetas de producto (.card.thumbnail).
+Recorre el catálogo paginado usando Selenium en modo headless.
 """
 
 import logging
@@ -31,8 +30,8 @@ class ScrapedProduct:
     Attributes:
         product_id: Identificador numérico del producto extraído de la URL.
         title: Título o nombre del producto.
-        type_name: Nombre de la subcategoría (ej. "Laptops").
-        price_usd: Precio numérico limpio en USD (float).
+        type_name: Nombre de la subcategoría.
+        price_usd: Precio numérico limpio en USD.
     """
 
     product_id: int
@@ -63,10 +62,10 @@ def _extract_product_id(card: WebElement) -> Optional[int]:
     """Extrae el product_id numérico desde el enlace del producto en la tarjeta.
 
     Args:
-        card: Elemento WebElement correspondiente a la tarjeta del producto.
+        card: Elemento WebElement de la tarjeta del producto.
 
     Returns:
-        Optional[int]: Identificador numérico extraído o None si no se encuentra.
+        Optional[int]: Identificador numérico extraído o None.
     """
     link = card.find_element(By.CSS_SELECTOR, "a.title")
     href = link.get_attribute("href") or ""
@@ -78,7 +77,7 @@ def _clean_price(raw_price: str) -> float:
     """Limpia el texto del precio eliminando el símbolo '$' y convirtiéndolo a float.
 
     Args:
-        raw_price: Texto del precio tal como aparece en el sitio (ej. "$1281.99").
+        raw_price: Texto del precio tal como aparece en el sitio.
 
     Returns:
         float: Valor numérico flotante.
@@ -95,10 +94,7 @@ def _parse_card(card: WebElement, subcategory_name: str) -> ScrapedProduct:
         subcategory_name: Nombre de la subcategoría que se está recorriendo.
 
     Returns:
-        ScrapedProduct: Objeto de datos con la información limpia del producto.
-
-    Raises:
-        ValueError: Si no se puede extraer el product_id.
+        ScrapedProduct: Objeto de datos con la información limpia.
     """
     product_id = _extract_product_id(card)
     if product_id is None:
@@ -119,22 +115,22 @@ def _parse_card(card: WebElement, subcategory_name: str) -> ScrapedProduct:
 
 
 def scrape_subcategory(
-    subcategory_path: str = "computers/laptops", num_pages: int = 5, headless: bool = True
+    subcategory_path: str = "computers/laptops",
+    num_pages: int = 5,
+    headless: bool = True,
 ) -> List[ScrapedProduct]:
     """Recorre al menos N páginas de una subcategoría y devuelve los productos.
 
     Args:
-        subcategory_path: Ruta relativa de la subcategoría (ej. "computers/laptops").
-        num_pages: Número de páginas de paginación a recorrer (mínimo 5 por defecto).
-        headless: Si es True, ejecuta el navegador en modo headless.
+        subcategory_path: Ruta relativa de la subcategoría.
+        num_pages: Número de páginas a recorrer.
+        headless: Si es True, ejecuta en modo headless.
 
     Returns:
         List[ScrapedProduct]: Lista consolidada de productos extraídos.
     """
     driver = _build_driver(headless=headless)
     all_products: List[ScrapedProduct] = []
-
-    # Deriva un nombre por defecto para la subcategoría
     subcategory_name = subcategory_path.split("/")[-1].capitalize()
 
     try:
@@ -143,15 +139,17 @@ def scrape_subcategory(
             logger.info("Scrapeando página %d: %s", page, url)
             driver.get(url)
 
-            # Espera explícita para asegurar la presencia de tarjetas de producto
             wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
             try:
-                wait.until(ec.presence_of_all_elements_located((By.CSS_SELECTOR, CARD_SELECTOR)))
+                wait.until(
+                    ec.presence_of_all_elements_located(
+                        (By.CSS_SELECTOR, CARD_SELECTOR)
+                    )
+                )
             except TimeoutException:
                 logger.warning("Timeout esperando tarjetas en la página %d.", page)
                 continue
 
-            # Extrae el nombre activo de la subcategoría del menú lateral si está disponible
             try:
                 active_menu = driver.find_element(
                     By.CSS_SELECTOR, "#side-menu a.active, .sidebar a.active"
@@ -169,7 +167,10 @@ def scrape_subcategory(
                     all_products.append(product)
                 except (NoSuchElementException, ValueError) as exc:
                     logger.warning(
-                        "Error al procesar la tarjeta #%d en pág. %d: %s", index + 1, page, exc
+                        "Error al procesar tarjeta #%d pág. %d: %s",
+                        index + 1,
+                        page,
+                        exc,
                     )
                     continue
 

@@ -44,7 +44,9 @@ def run(num_pages: int = 5) -> None:
     if top_products and top_products[0].type:
         sample_type = top_products[0].type.name
         by_type = repository.get_products_by_type(sample_type)
-        logger.info("=== PRODUCTOS PERTENECIENTES A '%s': %d ===", sample_type, len(by_type))
+        logger.info(
+            "=== PRODUCTOS PERTENECIENTES A '%s': %d ===", sample_type, len(by_type)
+        )
         for prod in by_type[:5]:
             logger.info(" - %s: $%.2f USD", prod.title, prod.price_usd)
 
